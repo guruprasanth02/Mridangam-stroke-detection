@@ -1,0 +1,257 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Roboto', sans-serif;
+}
+
+body {
+    background: url('/static/assets/stroke_bg.jfif') no-repeat center center/cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow-y: auto;
+    flex-direction: column;
+}
+
+/* Header with gradient background */
+.header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* Modern vibrant gradient */
+    width: 100%;
+    padding: 20px 0;
+    text-align: center;
+    color: white;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    position: fixed;
+    top: 0;
+    z-index: 10;
+}
+
+.container {
+    background-color: rgba(255, 255, 255, 0.95);
+    padding: 40px;
+    margin-top: 120px;
+    border-radius: 15px;
+    text-align: center;
+    width: 100%;
+    max-width: 550px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+}
+
+h1 {
+    color: #333;
+    margin-bottom: 15px;
+}
+
+p {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.upload-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px 25px;
+    border-radius: 25px;
+    cursor: pointer;
+    display: inline-block;
+    position: relative;
+    overflow: hidden;
+    border: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.upload-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.upload-btn input[type="file"] {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+
+/* Add this CSS rule to style the file name display */
+.file-name {
+    margin-top: 10px;
+    font-style: italic;
+    color: #555;
+}
+
+.process-btn {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    padding: 15px 25px;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    margin-top: 15px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+}
+
+.process-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.6);
+}
+
+/* Disabled button styling */
+.process-btn:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.6;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Progress bar container */
+.progress-bar-container {
+    margin-top: 20px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 25px;
+    background-color: #e9ecef;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar-fill {
+    width: 0;
+    height: 100%;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.progress-bar-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.result-section {
+    margin-top: 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.result-section:hover {
+    transform: translateY(-2px);
+}
+
+/* File name styling */
+.file-name {
+    margin-top: 10px;
+    font-style: italic;
+    color: #555;
+    font-weight: 400;
+}
+
+#strokeType {
+    font-weight: 700;
+    color: #667eea;
+    font-size: 18px;
+}
+
+/* Audio preview styles */
+.audio-preview {
+    margin-top: 15px;
+    display: none;
+}
+
+.audio-preview audio {
+    width: 100%;
+    border-radius: 10px;
+    outline: none;
+}
+
+.audio-preview label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 500;
+    color: #333;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .container {
+        margin-top: 100px;
+        padding: 30px;
+        max-width: 90%;
+    }
+
+    .header {
+        font-size: 24px;
+        padding: 15px 0;
+    }
+
+    h1 {
+        font-size: 24px;
+    }
+
+    .upload-btn, .process-btn {
+        padding: 12px 20px;
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 20px;
+    }
+
+    .header {
+        font-size: 20px;
+        padding: 10px 0;
+    }
+
+    h1 {
+        font-size: 20px;
+    }
+
+    .upload-btn, .process-btn {
+        padding: 10px 15px;
+        font-size: 14px;
+    }
+}

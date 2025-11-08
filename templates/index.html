@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stroke Detection</title>
+    <link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+     <!-- Header with TTRC and gradient background -->
+     <header class="header">
+        <h2>MRIDANGAM STROKE DETECTION</h2>
+    </header>
+    <!-- Container with upload mp3-->
+    <div class="container">
+        <h1>Stroke Detection from Audio</h1>
+        <p id="instruction">Please upload an audio file for stroke detection analysis.</p>
+
+        <form action = '/predict' id="uploadForm" enctype="multipart/form-data">
+            <label for="audioUpload" class="upload-btn">
+                Upload Audio File
+                <input type="file" id="audioUpload" accept="audio/*" required>
+            </label>
+            <p id="fileName" class="file-name">No file chosen</p>
+
+            <!-- Audio preview section -->
+            <div id="audioPreview" class="audio-preview">
+                <label for="audioPlayer">Audio Preview:</label>
+                <audio id="audioPlayer" controls>
+                    Your browser does not support the audio element.
+                </audio>
+            </div>
+
+            <button type="submit" class="process-btn" id="processBtn" disabled>Process</button>
+        </form>
+
+          <!-- Progress bar section -->
+          <div id="progressBarContainer" class="progress-bar-container" style="display: none;">
+            <p>Processing...</p>
+            <div class="progress-bar">
+                <div id="progressBar" class="progress-bar-fill"></div>
+            </div>
+        </div>
+
+        <div id="result" class="result-section">
+            <!-- Backend result will be shown here -->
+            <p>Detected Stroke: <span id="strokeType">N/A</span></p>
+        </div>
+    </div>
+
+    <script src={{url_for('static', filename="script.js" )}}></script>
+</body>
+</html>
