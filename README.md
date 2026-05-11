@@ -1,4 +1,4 @@
-# 🎵 Mridangam Stroke Detection
+# 🪘 Mridangam Stroke Detection
 
 ## 🌟 Overview
 
