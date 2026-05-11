@@ -1,12 +1,16 @@
 import numpy as np
-import librosa
+import os
+os.environ['NUMBA_DISABLE_JIT'] = '1'
+import soundfile as sf
+from python_speech_features import mfcc
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 
-model = load_model('audio_classification_model.h5')
+model = load_model('Stroke_classification_model.h5')
 
 def extract_features(y, sr, n_mfcc=13, max_len=100):
-    mfccs = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=n_mfcc)
+    mfccs = mfcc(y, sr, numcep=n_mfcc)
+    mfccs = mfccs.T  # Transpose to (n_mfcc, time)
     if mfccs.shape[1] > max_len:
         mfccs = mfccs[:, :max_len]  # Truncate
     elif mfccs.shape[1] < max_len:
@@ -15,7 +19,7 @@ def extract_features(y, sr, n_mfcc=13, max_len=100):
     return np.expand_dims(mfccs, axis=-1)
 
 def predict_stroke(file_path, model, label_map):
-    y_audio, sr = librosa.load(file_path, sr=None)
+    y_audio, sr = sf.read(file_path)
     mfccs = extract_features(y_audio, sr)
     mfccs = np.expand_dims(mfccs, axis=0)
 
@@ -25,7 +29,7 @@ def predict_stroke(file_path, model, label_map):
     predicted_label = list(label_map.keys())[list(label_map.values()).index(predicted_index)]
     return predicted_label
 
-audio_file_path = 'D:/stroke_detection/train/cha/224036__akshaylaya__cha-b-002.wav'
+audio_file_path = 'D:\\Mridangam-stroke-detection\\uploads\\20251108_161526_224063__akshaylaya__cha-b-029.wav'
 
 label_map = {'cha': 0, 'dheem': 1, 'thom': 2, 'tha': 3, 'ta': 4, 'thi': 5, 'num': 6, 'dhin': 7, 'tham': 8}
 

@@ -818,13 +818,7 @@ class _DictWrapper(TrackableDataStructure, wrapt.ObjectProxy):
       # of the wrapper without this logic.
       return object.__getattribute__(self, name)
     else:
-      # Raise TypeError as AttributeError to fix breakage in wrapt 1.15 for
-      # `__getattribute__` as suggested in discussion with library author in
-      # GitHub https://github.com/GrahamDumpleton/wrapt/issues/231
-      try:
-        return super().__getattribute__(name)
-      except TypeError as e:
-        raise AttributeError from e
+      return super().__getattribute__(name)
 
   def copy(self):
     return copy.copy(self)

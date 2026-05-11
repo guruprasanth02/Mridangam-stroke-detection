@@ -19,11 +19,9 @@ limitations under the License.
 #include "tensorflow/core/framework/function.h"
 #include "tensorflow/core/framework/types.h"
 #include "tensorflow/core/lib/gtl/inlined_vector.h"
-#include "tensorflow/core/platform/refcount.h"
 
 namespace tensorflow {
 
-class FunctionRecord;
 class Graph;
 class Node;
 
@@ -31,7 +29,7 @@ class Node;
 // instantiated function that is represented as a Graph with arg/ret
 // nodes annotated.
 struct FunctionBody {
-  core::RefCountPtr<FunctionRecord> record;
+  FunctionDef fdef;
   Graph* graph = nullptr;  // owned.
   DataTypeVector arg_types;
   DataTypeVector ret_types;
@@ -44,8 +42,8 @@ struct FunctionBody {
   gtl::InlinedVector<Node*, 4> control_ret_nodes;
 
   FunctionBody() {}
-  FunctionBody(core::RefCountPtr<FunctionRecord>&& record,
-               DataTypeSlice arg_types, DataTypeSlice ret_types, Graph* g);
+  FunctionBody(const FunctionDef& f, DataTypeSlice arg_types,
+               DataTypeSlice ret_types, Graph* g);
   ~FunctionBody();
 };
 

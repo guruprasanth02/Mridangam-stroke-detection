@@ -1,0 +1,3 @@
+- [x] Update requirements.txt to include gradio
+- [x] Create gradio_app.py script for Gradio deployment
+- [x] Test the Gradio app locally (skipped as per user request)

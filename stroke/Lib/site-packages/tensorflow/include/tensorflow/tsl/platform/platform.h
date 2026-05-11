@@ -82,6 +82,4 @@ limitations under the License.
 #endif
 #endif
 
-#define TSL_IS_IN_OSS 1
-
 #endif  // TENSORFLOW_TSL_PLATFORM_PLATFORM_H_

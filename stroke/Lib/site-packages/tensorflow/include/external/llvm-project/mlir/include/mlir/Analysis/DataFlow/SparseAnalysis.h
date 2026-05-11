@@ -17,7 +17,6 @@
 
 #include "mlir/Analysis/DataFlowFramework.h"
 #include "mlir/IR/SymbolTable.h"
-#include "mlir/Interfaces/CallInterfaces.h"
 #include "mlir/Interfaces/ControlFlowInterfaces.h"
 #include "llvm/ADT/SmallPtrSet.h"
 
@@ -169,15 +168,15 @@ private:
 };
 
 //===----------------------------------------------------------------------===//
-// AbstractSparseForwardDataFlowAnalysis
+// AbstractSparseDataFlowAnalysis
 //===----------------------------------------------------------------------===//
 
-/// Base class for sparse forward data-flow analyses. A sparse analysis
+/// Base class for sparse (forward) data-flow analyses. A sparse analysis
 /// implements a transfer function on operations from the lattices of the
 /// operands to the lattices of the results. This analysis will propagate
 /// lattices across control-flow edges and the callgraph using liveness
 /// information.
-class AbstractSparseForwardDataFlowAnalysis : public DataFlowAnalysis {
+class AbstractSparseDataFlowAnalysis : public DataFlowAnalysis {
 public:
   /// Initialize the analysis by visiting every owner of an SSA value: all
   /// operations and blocks.
@@ -191,7 +190,7 @@ public:
   LogicalResult visit(ProgramPoint point) override;
 
 protected:
-  explicit AbstractSparseForwardDataFlowAnalysis(DataFlowSolver &solver);
+  explicit AbstractSparseDataFlowAnalysis(DataFlowSolver &solver);
 
   /// The operation transfer function. Given the operand lattices, this
   /// function is expected to set the result lattices.
@@ -199,12 +198,6 @@ protected:
   visitOperationImpl(Operation *op,
                      ArrayRef<const AbstractSparseLattice *> operandLattices,
                      ArrayRef<AbstractSparseLattice *> resultLattices) = 0;
-
-  /// The transfer function for calls to external functions.
-  virtual void visitExternalCallImpl(
-      CallOpInterface call,
-      ArrayRef<const AbstractSparseLattice *> argumentLattices,
-      ArrayRef<AbstractSparseLattice *> resultLattices) = 0;
 
   /// Given an operation with region control-flow, the lattices of the operands,
   /// and a region successor, compute the lattice values for block arguments
@@ -250,41 +243,32 @@ private:
   /// regions or the parent operation itself, and set either the argument or
   /// parent result lattices.
   void visitRegionSuccessors(ProgramPoint point, RegionBranchOpInterface branch,
-                             RegionBranchPoint successor,
+                             std::optional<unsigned> successorIndex,
                              ArrayRef<AbstractSparseLattice *> lattices);
 };
 
 //===----------------------------------------------------------------------===//
-// SparseForwardDataFlowAnalysis
+// SparseDataFlowAnalysis
 //===----------------------------------------------------------------------===//
 
-/// A sparse forward data-flow analysis for propagating SSA value lattices
+/// A sparse (forward) data-flow analysis for propagating SSA value lattices
 /// across the IR by implementing transfer functions for operations.
 ///
 /// `StateT` is expected to be a subclass of `AbstractSparseLattice`.
 template <typename StateT>
-class SparseForwardDataFlowAnalysis
-    : public AbstractSparseForwardDataFlowAnalysis {
+class SparseDataFlowAnalysis : public AbstractSparseDataFlowAnalysis {
   static_assert(
       std::is_base_of<AbstractSparseLattice, StateT>::value,
       "analysis state class expected to subclass AbstractSparseLattice");
 
 public:
-  explicit SparseForwardDataFlowAnalysis(DataFlowSolver &solver)
-      : AbstractSparseForwardDataFlowAnalysis(solver) {}
+  explicit SparseDataFlowAnalysis(DataFlowSolver &solver)
+      : AbstractSparseDataFlowAnalysis(solver) {}
 
   /// Visit an operation with the lattices of its operands. This function is
   /// expected to set the lattices of the operation's results.
   virtual void visitOperation(Operation *op, ArrayRef<const StateT *> operands,
                               ArrayRef<StateT *> results) = 0;
-
-  /// Visit a call operation to an externally defined function given the
-  /// lattices of its arguments.
-  virtual void visitExternalCall(CallOpInterface call,
-                                 ArrayRef<const StateT *> argumentLattices,
-                                 ArrayRef<StateT *> resultLattices) {
-    setAllToEntryStates(resultLattices);
-  }
 
   /// Given an operation with possible region control-flow, the lattices of the
   /// operands, and a region successor, compute the lattice values for block
@@ -311,14 +295,13 @@ protected:
   /// provided program point.
   const StateT *getLatticeElementFor(ProgramPoint point, Value value) {
     return static_cast<const StateT *>(
-        AbstractSparseForwardDataFlowAnalysis::getLatticeElementFor(point,
-                                                                    value));
+        AbstractSparseDataFlowAnalysis::getLatticeElementFor(point, value));
   }
 
   /// Set the given lattice element(s) at control flow entry point(s).
   virtual void setToEntryState(StateT *lattice) = 0;
   void setAllToEntryStates(ArrayRef<StateT *> lattices) {
-    AbstractSparseForwardDataFlowAnalysis::setAllToEntryStates(
+    AbstractSparseDataFlowAnalysis::setAllToEntryStates(
         {reinterpret_cast<AbstractSparseLattice *const *>(lattices.begin()),
          lattices.size()});
   }
@@ -333,17 +316,6 @@ private:
         op,
         {reinterpret_cast<const StateT *const *>(operandLattices.begin()),
          operandLattices.size()},
-        {reinterpret_cast<StateT *const *>(resultLattices.begin()),
-         resultLattices.size()});
-  }
-  void visitExternalCallImpl(
-      CallOpInterface call,
-      ArrayRef<const AbstractSparseLattice *> argumentLattices,
-      ArrayRef<AbstractSparseLattice *> resultLattices) override {
-    visitExternalCall(
-        call,
-        {reinterpret_cast<const StateT *const *>(argumentLattices.begin()),
-         argumentLattices.size()},
         {reinterpret_cast<StateT *const *>(resultLattices.begin()),
          resultLattices.size()});
   }
@@ -366,8 +338,8 @@ private:
 // AbstractSparseBackwardDataFlowAnalysis
 //===----------------------------------------------------------------------===//
 
-/// Base class for sparse backward data-flow analyses. Similar to
-/// AbstractSparseForwardDataFlowAnalysis, but walks bottom to top.
+/// Base class for sparse (backward) data-flow analyses. Similar to
+/// AbstractSparseDataFlowAnalysis, but walks bottom to top.
 class AbstractSparseBackwardDataFlowAnalysis : public DataFlowAnalysis {
 public:
   /// Initialize the analysis by visiting the operation and everything nested
@@ -389,16 +361,8 @@ protected:
       Operation *op, ArrayRef<AbstractSparseLattice *> operandLattices,
       ArrayRef<const AbstractSparseLattice *> resultLattices) = 0;
 
-  /// The transfer function for calls to external functions.
-  virtual void visitExternalCallImpl(
-      CallOpInterface call, ArrayRef<AbstractSparseLattice *> operandLattices,
-      ArrayRef<const AbstractSparseLattice *> resultLattices) = 0;
-
-  // Visit operands on branch instructions that are not forwarded.
+  // Visit operands on branch instructions that are not forwarded
   virtual void visitBranchOperand(OpOperand &operand) = 0;
-
-  // Visit operands on call instructions that are not forwarded.
-  virtual void visitCallOperand(OpOperand &operand) = 0;
 
   /// Set the given lattice element(s) at control flow exit point(s).
   virtual void setToExitState(AbstractSparseLattice *lattice) = 0;
@@ -430,14 +394,6 @@ private:
   /// Visit an op with regions (like e.g. `scf.while`)
   void visitRegionSuccessors(RegionBranchOpInterface branch,
                              ArrayRef<AbstractSparseLattice *> operands);
-
-  /// Visit a `RegionBranchTerminatorOpInterface` to compute the lattice values
-  /// of its operands, given its parent op `branch`. The lattice value of an
-  /// operand is determined based on the corresponding arguments in
-  /// `terminator`'s region successor(s).
-  void visitRegionSuccessorsFromTerminator(
-      RegionBranchTerminatorOpInterface terminator,
-      RegionBranchOpInterface branch);
 
   /// Get the lattice element for a value, and also set up
   /// dependencies so that the analysis on the given ProgramPoint is re-invoked
@@ -475,19 +431,6 @@ public:
   virtual void visitOperation(Operation *op, ArrayRef<StateT *> operands,
                               ArrayRef<const StateT *> results) = 0;
 
-  /// Visit a call to an external function. This function is expected to set
-  /// lattice values of the call operands. By default, calls `visitCallOperand`
-  /// for all operands.
-  virtual void visitExternalCall(CallOpInterface call,
-                                 ArrayRef<StateT *> argumentLattices,
-                                 ArrayRef<const StateT *> resultLattices) {
-    (void)argumentLattices;
-    (void)resultLattices;
-    for (OpOperand &operand : call->getOpOperands()) {
-      visitCallOperand(operand);
-    }
-  };
-
 protected:
   /// Get the lattice element for a value.
   StateT *getLatticeElement(Value value) override {
@@ -513,17 +456,6 @@ private:
       ArrayRef<const AbstractSparseLattice *> resultLattices) override {
     visitOperation(
         op,
-        {reinterpret_cast<StateT *const *>(operandLattices.begin()),
-         operandLattices.size()},
-        {reinterpret_cast<const StateT *const *>(resultLattices.begin()),
-         resultLattices.size()});
-  }
-
-  void visitExternalCallImpl(
-      CallOpInterface call, ArrayRef<AbstractSparseLattice *> operandLattices,
-      ArrayRef<const AbstractSparseLattice *> resultLattices) override {
-    visitExternalCall(
-        call,
         {reinterpret_cast<StateT *const *>(operandLattices.begin()),
          operandLattices.size()},
         {reinterpret_cast<const StateT *const *>(resultLattices.begin()),
