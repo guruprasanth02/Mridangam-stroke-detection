@@ -4,6 +4,11 @@
 
 This project leverages a Convolutional Neural Network (CNN) to classify various strokes (syllables) of the Mridangam, a traditional South Indian percussion instrument, from audio files. It provides both training scripts for model development and a user-friendly Flask web application for real-time stroke prediction, making it accessible for musicians, researchers, and enthusiasts. 🎶
 
+
+## 🌐 Live Demo
+Try the app here: **[Stroke](https://huggingface.co/spaces/guruprasanth163/mridangam-stroke-detection)**
+
+
 ## ✨ Features
 
 - **🎧 Audio Classification**: Accurately identifies Mridangam strokes such as Cha, Dheem, Dhin, Num, Ta, Tha, Tham, Thi, and Thom using MFCC features.
